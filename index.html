@@ -5,20 +5,76 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>슬라이드 퀴즈</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 2rem; background: #f9f9f9; }
-    .quiz-container { max-width: 600px; margin: auto; background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);}
-    .question { font-size: 1.2rem; margin-bottom: 1rem; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #f9f9f9;
+      position: relative;
+    }
+    .quiz-container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .question {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
     .options { list-style: none; padding: 0; }
     .options li { margin: 0.5rem 0; }
     .slide { display: none; transition: all 0.5s ease; }
     .slide.active { display: block; }
     #result { text-align: center; }
-    button { margin-top: 1rem; padding: 0.6rem 1.2rem; font-size: 1rem; border: none; border-radius: 5px; background: #007BFF; color: white; cursor: pointer; }
+    button {
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background: #007BFF;
+      color: white;
+      cursor: pointer;
+    }
+    #timer {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      background: #fff;
+      padding: 0.5rem 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    #authContainer {
+      text-align: center;
+    }
+    #authContainer input {
+      padding: 0.5rem;
+      font-size: 1rem;
+      width: 70%;
+      margin-bottom: 1rem;
+    }
   </style>
 </head>
 <body>
+  <div id="timer" style="display:none;">03:00</div>
+
   <div class="quiz-container">
-    <div id="quiz"></div>
+    <div id="authContainer">
+      <h2>비밀번호를 입력하세요</h2>
+      <input type="password" id="passwordInput" placeholder="비밀번호 입력"/>
+      <br/>
+      <button onclick="checkPassword()">확인</button>
+      <br/>
+      <button id="startBtn" onclick="startQuiz()" style="display:none;">Start</button>
+    </div>
+
+    <div id="quiz" style="display:none;"></div>
+
     <div id="result" class="slide">
       <h2 id="scoreText"></h2>
       <button id="enterBtn">입장하기</button>
@@ -26,89 +82,52 @@
   </div>
 
   <script>
-    // 접근 경로 및 도메인 확인
-    if (document.referrer !== "https://yousoo68.github.io/fjYxbSA/") {
-      window.location.href = "https://yousoo68.github.io/fjYxbSA/";
-    }
-
-    if (window.location.hostname !== "yousoo68.github.io") {
-      document.body.innerHTML = "<h1 style='text-align: center; margin-top: 50px; color: var(--primary-color);'>이 페이지는 섹시유수 갤러리를 통해서만 접속할 수 있습니다.</h1>";
-      setTimeout(function() {
-        window.location.href = "https://yousoo68.github.io/fjYxbSA/";
-      }, 5000);
-    }
-
-    const quizData = [
-      {
-        q: "𝟏. 현재 신유수가 마음에 품고 있는 상대(108)의 본명은 무엇인가?",
-        a: "조예진",
-        choices: ["정유진", "조예진", "조여진", "정효진", "주예지", "이 중에 없음"]
-      },
-      {
-        q: "𝟐. 조예진이 속해있는 집단은 어디인가?",
-        a: "호매실고등학교 방송부",
-        choices: ["칠보고등학교", "율천고등학교", "호매실고등학교 배구부", "호매실고등학교 방송부", "호매실고등학교 학생회", "이 중에 없음"]
-      },
-      {
-        q: "𝟑. 조예진의 동물상은?",
-        a: "공룡상",
-        choices: ["강아지상", "꼬부기상", "고양이상", "뱀상", "공룡상", "이 중에 없음"]
-      },
-      {
-        q: "𝟒. 조예진의 헤어스타일",
-        a: "숏컷",
-        choices: ["긴생머리", "칼단발", "숏컷", "묶음머리", "리프컷", "이 중에 없음"]
-      },
-      {
-        q: "𝟓. 신유수를 제외한 신.여.만 작전의 창설 멤버는?",
-        a: "이 중에 없음",
-        choices: ["김기범", "김건우", "윤예찬", "송인호", "정세윤", "이 중에 없음"]
-      },
-      {
-        q: "𝟔. 신유수가 조예진에게 마음을 품게 된 가장 처음 이유는?",
-        a: "몸매",
-        choices: ["목소리", "성적(成績)", "성격", "얼굴", "몸매", "이 중에 없음"]
-      },
-      {
-        q: "𝟕. 신유수가 조예진에게 처음 디엠한 날짜는?",
-        a: "이 중에 없음",
-        choices: ["2025년5월3일", "2025년5월6일", "2025년5월8일", "2025년5월10일", "2025년5월17일", "이 중에 없음"]
-      },
-      {
-        q: "𝟖. 신유수가 조예진에게 가장 처음으로 한 말은?",
-        a: "이 중에 없음",
-        choices: ["너 내 여자해라.", "안녕, 저번에 우연히 봤는데 너무 내 취향이라 디엠 해봤어.", "내 아를 낳아도.", "넣을게~", "안녕하세요, 3학년 신유수 입니다.", "이 중에 없음"]
-      },
-      {
-        q: "𝟗. 신유수 말고도 조예진을 탐내는 사람은?",
-        a: "이 중에 없음",
-        choices: ["이수호", "강현민", "김기범", "김건우", "윤예찬", "이 중에 없음"]
-      },
-      {
-        q: "𝟏𝟎. 신.여.만 작전의 멤버를 올바르게 짝 지어놓은 것은?",
-        a: "신유수, 손현민, 김기범, 김건우, 송인호",
-        choices: ["신유수, 김기범, 김건우, 송인호, 이수호", "윤예찬, 손현민, 김기범, 김건우, 이수호", "신유수, 이수호, 김기범, 송인호, 윤예찬", "신유수, 손현민, 김기범, 김건우, 송인호", "신유수, 손현민, 김건우, 송인호, 권혁", "이 중에 없음"]
-      },
-      {
-        q: "𝟏𝟏. 조예진을 알고있는 사람으로 옳지 않은 것은?",
-        a: "윤예찬",
-        choices: ["손현민", "신유수", "이수호", "권혁", "윤예찬", "이 중에 없음"]
-      },
-      {
-        q: "𝟏𝟐. 조예진의 생일은?",
-        a: "이 중에 없음",
-        choices: ["6월8일", "3월17일", "11월8일", "12월12일", "1월27일", "이 중에 없음"]
-      },
-      {
-        q: "𝟏𝟑. 신유수가 가장 좋아하는 노래는?",
-        a: "이 중에 없음",
-        choices: ["카더가든 - 조각 구름", "10cm - 봄눈", "Stephen Sanchez - Until I Found You", "The Walters - I Love you so", "씨발밴드 - 자지, 보지, 섹스!", "이 중에 없음"]
-      }
-    ];
-
+    const correctPassword = "AZ56W6jpqx8EmsV";
+    const authContainer = document.getElementById('authContainer');
+    const startBtn = document.getElementById('startBtn');
     const quizContainer = document.getElementById('quiz');
+    const timerElement = document.getElementById('timer');
+    const result = document.getElementById('result');
+    const scoreText = document.getElementById('scoreText');
+    const enterBtn = document.getElementById('enterBtn');
+
     let currentIndex = 0;
     let score = 0;
+    let timer;
+    let timeLeft = 180;
+
+    const quizData = [
+      { q: "𝟏. 현재 신유수가 마음에 품고 있는 상대(108)의 본명은 무엇인가?", a: "조예진", choices: ["정유진", "조예진", "조여진", "정효진", "주예지", "이 중에 없음"] },
+      { q: "𝟐. 조예진이 속해있는 집단은 어디인가?", a: "호매실고등학교 방송부", choices: ["칠보고등학교", "율천고등학교", "호매실고등학교 배구부", "호매실고등학교 방송부", "호매실고등학교 학생회", "이 중에 없음"] },
+      { q: "𝟑. 조예진의 동물상은?", a: "공룡상", choices: ["강아지상", "꼬부기상", "고양이상", "뱀상", "공룡상", "이 중에 없음"] },
+      { q: "𝟒. 조예진의 헤어스타일", a: "숏컷", choices: ["긴생머리", "칼단발", "숏컷", "묶음머리", "리프컷", "이 중에 없음"] },
+      { q: "𝟓. 신유수를 제외한 신.여.만 작전의 창설 멤버는?", a: "이 중에 없음", choices: ["김기범", "김건우", "윤예찬", "송인호", "정세윤", "이 중에 없음"] },
+      { q: "𝟔. 신유수가 조예진에게 마음을 품게 된 가장 처음 이유는?", a: "몸매", choices: ["목소리", "성적(成績)", "성격", "얼굴", "몸매", "이 중에 없음"] },
+      { q: "𝟕. 신유수가 조예진에게 처음 디엠한 날짜는?", a: "이 중에 없음", choices: ["2025년5월3일", "2025년5월6일", "2025년5월8일", "2025년5월10일", "2025년5월17일", "이 중에 없음"] },
+      { q: "𝟖. 신유수가 조예진에게 가장 처음으로 한 말은?", a: "이 중에 없음", choices: ["너 내 여자해라.", "안녕, 저번에 우연히 봤는데 너무 내 취향이라 디엠 해봤어.", "내 아를 낳아도.", "넣을게~", "안녕하세요, 3학년 신유수 입니다.", "이 중에 없음"] },
+      { q: "𝟗. 신유수 말고도 조예진을 탐내는 사람은?", a: "이 중에 없음", choices: ["이수호", "강현민", "김기범", "김건우", "윤예찬", "이 중에 없음"] },
+      { q: "𝟏𝟎. 신.여.만 작전의 멤버를 올바르게 짝 지어놓은 것은?", a: "신유수, 손현민, 김기범, 김건우, 송인호", choices: ["신유수, 김기범, 김건우, 송인호, 이수호", "윤예찬, 손현민, 김기범, 김건우, 이수호", "신유수, 이수호, 김기범, 송인호, 윤예찬", "신유수, 손현민, 김기범, 김건우, 송인호", "신유수, 손현민, 김건우, 송인호, 권혁", "이 중에 없음"] },
+      { q: "𝟏𝟏. 조예진을 알고있는 사람으로 옳지 않은 것은?", a: "윤예찬", choices: ["손현민", "신유수", "이수호", "권혁", "윤예찬", "이 중에 없음"] },
+      { q: "𝟏𝟐. 조예진의 생일은?", a: "이 중에 없음", choices: ["6월8일", "3월17일", "11월8일", "12월12일", "1월27일", "이 중에 없음"] },
+      { q: "𝟏𝟑. 신유수가 가장 좋아하는 노래는?", a: "이 중에 없음", choices: ["카더가든 - 조각 구름", "10cm - 봄눈", "Stephen Sanchez - Until I Found You", "The Walters - I Love you so", "씨발밴드 - 자지, 보지, 섹스!", "이 중에 없음"] }
+    ];
+
+    function checkPassword() {
+      const pw = document.getElementById("passwordInput").value;
+      if (pw === correctPassword) {
+        startBtn.style.display = "inline-block";
+      } else {
+        alert("비밀번호가 틀렸습니다.");
+      }
+    }
+
+    function startQuiz() {
+      authContainer.style.display = "none";
+      quizContainer.style.display = "block";
+      timerElement.style.display = "block";
+      showQuestion(currentIndex);
+      startTimer();
+    }
 
     function shuffle(array) {
       return array.sort(() => Math.random() - 0.5);
@@ -130,7 +149,6 @@
     function checkAnswer(selected) {
       const correct = quizData[currentIndex].a;
       if (selected === correct) score++;
-
       document.querySelector('.slide').classList.remove('active');
       setTimeout(() => {
         currentIndex++;
@@ -143,23 +161,46 @@
     }
 
     function showResult() {
-      document.getElementById('quiz').style.display = 'none';
-      const result = document.getElementById('result');
-      const scoreText = document.getElementById('scoreText');
-      scoreText.textContent = `당신의 점수는 ${score} / ${quizData.length}점입니다.`;
+      quizContainer.style.display = "none";
       result.classList.add('active');
+      scoreText.textContent = `당신의 점수는 ${score} / ${quizData.length}점입니다.`;
+      pauseTimer();
 
-      document.getElementById('enterBtn').onclick = () => {
+      enterBtn.onclick = () => {
         if (score === quizData.length) {
           scoreText.textContent = '축하해!';
-          document.getElementById('enterBtn').style.display = 'none';
+          enterBtn.style.display = 'none';
         } else {
           window.location.href = "https://m.dcinside.com/board/army/623279";
         }
       };
     }
 
-    showQuestion(currentIndex);
+    function startTimer() {
+      timer = setInterval(() => {
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          window.location.href = "https://yousoo68.github.io/fjYxbSA/";
+        } else {
+          timeLeft--;
+          const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+          const seconds = String(timeLeft % 60).padStart(2, '0');
+          timerElement.textContent = `${minutes}:${seconds}`;
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      clearInterval(timer);
+    }
+
+    // 접근 경로 확인
+    if (document.referrer !== "https://yousoo68.github.io/fjYxbSA/" || window.location.hostname !== "yousoo68.github.io") {
+      document.body.innerHTML = "<h1 style='text-align: center; margin-top: 50px;'>이 페이지는 섹시유수 갤러리를 통해서만 접속할 수 있습니다.</h1>";
+      setTimeout(() => {
+        window.location.href = "https://yousoo68.github.io/fjYxbSA/";
+      }, 5000);
+    }
   </script>
 </body>
 </html>
