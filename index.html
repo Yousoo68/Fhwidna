@@ -5,139 +5,109 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>신여만 작전 일지 입장 심사</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Pretendard&display=swap');
-
     body {
-      font-family: 'Pretendard', sans-serif;
-      background: linear-gradient(145deg, #e6e9f0, #eef1f5);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       padding: 2rem;
+      background: linear-gradient(to right, #f0f4f8, #d9e2ec);
+      position: relative;
       color: #333;
     }
-
     .quiz-container {
       max-width: 700px;
       margin: auto;
-      background: #fff;
-      padding: 2rem 3rem;
-      border-radius: 15px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      background: #ffffff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     }
-
-    h2 {
-      margin-bottom: 1rem;
-      color: #1f2d3d;
-    }
-
     .question {
-      font-size: 1.25rem;
-      font-weight: 600;
+      font-size: 1.3rem;
       margin-bottom: 1rem;
+      font-weight: 600;
     }
-
-    .question u {
-      text-decoration: underline;
-    }
-
     .options {
       list-style: none;
       padding: 0;
     }
-
     .options li {
       margin: 0.5rem 0;
     }
-
     .options button {
       width: 100%;
-      padding: 0.75rem;
-      background: #f0f4fa;
-      border: 2px solid #c3d4ec;
-      border-radius: 10px;
+      padding: 0.8rem;
       font-size: 1rem;
-      transition: all 0.2s ease;
+      border: 2px solid #007BFF;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #007BFF;
       cursor: pointer;
+      transition: background 0.3s, color 0.3s;
     }
-
     .options button:hover {
-      background-color: #d8e6f9;
-      border-color: #7aa9dd;
+      background: #007BFF;
+      color: #ffffff;
     }
-
+    .slide {
+      display: none;
+      transition: all 0.5s ease;
+    }
+    .slide.active {
+      display: block;
+    }
+    #result {
+      text-align: center;
+    }
     button {
       margin-top: 1rem;
-      padding: 0.7rem 1.4rem;
+      padding: 0.6rem 1.2rem;
       font-size: 1rem;
       border: none;
-      border-radius: 8px;
+      border-radius: 5px;
       background: #007BFF;
       color: white;
       cursor: pointer;
       transition: background 0.3s;
     }
-
     button:hover {
       background: #0056b3;
     }
-
+    #timer {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      background: #ffffff;
+      padding: 0.5rem 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    #authContainer {
+      text-align: center;
+    }
     #authContainer input {
-      padding: 0.6rem;
+      padding: 0.5rem;
       font-size: 1rem;
       width: 70%;
       margin-bottom: 1rem;
       border: 1px solid #ccc;
-      border-radius: 6px;
+      border-radius: 5px;
     }
-
-    #timer {
-      position: fixed;
-      top: 20px;
-      right: 30px;
-      font-size: 1.2rem;
-      font-weight: bold;
-      background: #fff;
-      color: #007BFF;
-      padding: 0.5rem 1rem;
-      border: 2px solid #007BFF;
-      border-radius: 10px;
-      z-index: 999;
-    }
-
-    .slide {
-      display: none;
-    }
-
-    .slide.active {
-      display: block;
-    }
-
-    #result {
-      text-align: center;
-      margin-top: 2rem;
-    }
-
     #mistakeList {
-      max-height: 0;
+      text-align: left;
+      margin-top: 1rem;
       overflow: hidden;
+      max-height: 0;
       opacity: 0;
-      transition: max-height 0.6s ease, opacity 0.6s ease;
+      transition: max-height 0.5s ease, opacity 0.5s ease;
     }
-
     #mistakeList.show {
       max-height: 1000px;
       opacity: 1;
-      margin-top: 1rem;
-      text-align: left;
     }
-
-    #mistakeList div {
-      padding: 0.4rem 0;
-      border-bottom: 1px dashed #ccc;
-    }
-
-    .quiz-container button#toggleMistakesBtn,
-    .quiz-container button#enterBtn {
-      display: inline-block;
-      margin: 1rem 0.5rem 0;
+    .underline {
+      text-decoration: underline;
     }
   </style>
 </head>
@@ -149,18 +119,18 @@
       <h2>비밀번호를 입력하세요</h2>
       <input type="password" id="passwordInput" placeholder="비밀번호 입력"/>
       <br/>
-      <button onclick="checkPassword()">확인</button>
+      <button id="checkPasswordBtn">확인</button>
       <br/>
-      <button id="startBtn" onclick="startQuiz()" style="display:none;">Start</button>
+      <button id="startBtn" style="display:none;">Start</button>
     </div>
 
     <div id="quiz" style="display:none;"></div>
 
     <div id="result" class="slide">
       <h2 id="scoreText"></h2>
-      <button id="toggleMistakesBtn" onclick="toggleMistakes()">오답 보기</button>
-      <button id="enterBtn">입장하기</button>
+      <button id="toggleMistakesBtn">오답 보기</button>
       <div id="mistakeList"></div>
+      <button id="enterBtn">입장하기</button>
     </div>
   </div>
 
@@ -174,6 +144,8 @@
     const scoreText = document.getElementById('scoreText');
     const enterBtn = document.getElementById('enterBtn');
     const mistakeList = document.getElementById('mistakeList');
+    const toggleMistakesBtn = document.getElementById('toggleMistakesBtn');
+    const checkPasswordBtn = document.getElementById('checkPasswordBtn');
 
     let currentIndex = 0;
     let score = 0;
@@ -188,192 +160,15 @@
         a: "조예진",
         choices: ["정유진", "조예진", "조여진", "정효진", "주예지", "이 중에 없음"]
       },
-      {
-        q: "𝟐. NAME이 속해있는 집단은 어디인가?",
-        a: "호매실고등학교 방송부",
-        choices: ["칠보고등학교", "율천고등학교", "호매실고등학교 배구부", "호매실고등학교 방송부", "호매실고등학교 학생회", "이 중에 없음"]
-      },
-      {
-        q: "𝟑. NAME의 동물상은?",
-        a: "공룡상",
-        choices: ["강아지상", "꼬부기상", "고양이상", "뱀상", "공룡상", "이 중에 없음"]
-      },
-      {
-        q: "𝟒. NAME의 헤어스타일",
-        a: "숏컷",
-        choices: ["긴생머리", "칼단발", "숏컷", "묶음머리", "리프컷", "이 중에 없음"]
-      },
-      {
-        q: "𝟓. 신유수를 제외한 신.여.만 작전의 창설 멤버는?",
-        a: "이 중에 없음",
-        choices: ["김기범", "김건우", "윤예찬", "송인호", "정세윤", "이 중에 없음"]
-      },
-      {
-        q: "𝟔. 신유수가 NAME에게 마음을 품게 된 가장 처음 이유는?",
-        a: "몸매",
-        choices: ["목소리", "성적(成績)", "성격", "얼굴", "몸매", "이 중에 없음"]
-      },
-      {
-        q: "𝟕. 신유수가 NAME에게 처음 디엠한 날짜는?",
-        a: "이 중에 없음",
-        choices: ["2025년5월3일", "2025년5월6일", "2025년5월8일", "2025년5월10일", "2025년5월17일", "이 중에 없음"]
-      },
-      {
-        q: "𝟖. 신유수가 NAME에게 가장 처음으로 한 디엠은?",
-        a: "이 중에 없음",
-        choices: ["너 내 여자해라.", "안녕, 저번에 우연히 봤는데 너무 내 취향이라 디엠 해봤어.", "내 아를 낳아도.", "넣을게~", "안녕하세요, 3학년 신유수 입니다.", "이 중에 없음"]
-      },
-      {
-        q: "𝟗. 신유수 말고도 NAME을 탐내는 사람은?",
-        a: "이 중에 없음",
-        choices: ["이수호", "강현민", "김기범", "김건우", "윤예찬", "이 중에 없음"]
-      },
-      {
-        q: "𝟏𝟎. 신.여.만 작전의 멤버를 올바르게 짝 지어놓은 것은?",
-        a: "신유수, 손현민, 김기범, 김건우, 송인호",
-        choices: ["신유수, 김기범, 김건우, 송인호, 이수호", "윤예찬, 손현민, 김기범, 김건우, 이수호", "신유수, 이수호, 김기범, 송인호, 윤예찬", "신유수, 손현민, 김기범, 김건우, 송인호", "신유수, 손현민, 김건우, 송인호, 권혁", "이 중에 없음"]
-      },
-      {
-        q: "𝟏𝟏. 조예진을 알고있는 사람으로 <u>옳지 않은</u> 것은?",
-        a: "윤예찬",
-        choices: ["손현민", "신유수", "이수호", "권혁", "윤예찬", "이 중에 없음"]
-      },
-      {
-        q: "𝟏𝟐. NAME의 생일은?",
-        a: "이 중에 없음",
-        choices: ["6월8일", "3월17일", "11월8일", "12월12일", "1월27일", "이 중에 없음"]
-      },
-      {
-        q: "𝟏𝟑. 신유수가 가장 좋아하는 노래는?",
-        a: "이 중에 없음",
-        choices: ["카더가든 - 조각 구름", "10cm - 봄눈", "Stephen Sanchez - Until I Found You", "The Walters - I Love you so", "씨발밴드 - 자지, 보지, 섹스!", "이 중에 없음"]
-      }
-    ];
-
-    function checkPassword() {
-      const pw = document.getElementById("passwordInput").value;
-      if (pw === correctPassword) {
-        startBtn.style.display = "inline-block";
-      } else {
-        alert("비밀번호가 틀렸습니다.");
-      }
-    }
-
-    function startQuiz() {
-      authContainer.style.display = "none";
-      quizContainer.style.display = "block";
-      timerElement.style.display = "block";
-      showQuestion(currentIndex);
-      startTimer();
-    }
-
-    function shuffle(array) {
-      return array.sort(() => Math.random() - 0.5);
-    }
-
-    function showQuestion(index) {
-      if (index === 1) {
-        quizData.forEach((q, i) => {
-          if (i >= 1) {
-            q.q = q.q.replace(/NAME/g, chosenName);
-          }
-        });
-      }
-
-      let questionObj = quizData[index];
-      const shuffled = shuffle([...questionObj.choices]);
-
-      quizContainer.innerHTML = `
-        <div class="slide active">
-          <div class="question">${questionObj.q}</div>
-          <ul class="options">
-            ${shuffled.map(choice => `<li><button onclick="checkAnswer('${choice.replace(/'/g, "\\'")}')">${choice}</button></li>`).join("")}
-          </ul>
-        </div>
-      `;
-    }
-
-    function checkAnswer(selected) {
-      if (currentIndex === 0) {
-        const nameMap = {
-          "조예진": "조예진",
-          "조여진": "조여진",
-          "주예지": "주예지",
-          "정효진": "정효진",
-          "정유진": "정유진",
-          "이 중에 없음": "108"
-        };
-        chosenName = nameMap[selected] || "조예진";
-      }
-
-      const correct = quizData[currentIndex].a;
-      if (selected === correct) {
-        score++;
-      } else {
-        wrongAnswers.push({
-          question: quizData[currentIndex].q,
-          selected
-        });
-      }
-
-      currentIndex++;
-      if (currentIndex < quizData.length) {
-        showQuestion(currentIndex);
-      } else {
-        showResult();
-      }
-    }
-
-    function showResult() {
-      clearInterval(timer);
-      quizContainer.style.display = "none";
-      result.classList.add('active');
-
-      for (let i = currentIndex; i < quizData.length; i++) {
-        wrongAnswers.push({
-          question: quizData[i].q,
-          selected: "미응답"
-        });
-      }
-
-      scoreText.textContent = `당신의 점수는 ${score} / ${quizData.length}점입니다.`;
-
-      if (wrongAnswers.length === 0) {
-        mistakeList.innerHTML = "<p>틀린 문제가 없습니다.</p>";
-      } else {
-        mistakeList.innerHTML = wrongAnswers.map(m => `
-          <div>
-            ${m.question}<br/>
-            - 선택한 답: ${m.selected}
-          </div>
-        `).join('');
-      }
-
-      document.getElementById("toggleMistakesBtn").style.display = "inline-block";
-      document.getElementById("enterBtn").style.display = "inline-block";
-
-      enterBtn.onclick = () => {
-        if (score === quizData.length) {
-          scoreText.textContent = '축하해!';
-          enterBtn.style.display = 'none';
-        } else {
-          window.location.href = "https://yousoo68.github.io/fjYxbSA/";
-        }
-      };
-    }
-
-    function toggleMistakes() {
-      mistakeList.classList.toggle('show');
-    }
-
-    function startTimer() {
-      timer = setInterval(() => {
-        if (timeLeft <= 0) {
-          showResult();
-        } else {
-          timeLeft--;
-          const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
-          const seconds = String(timeLeft % 60).padStart(2, '0');
-          timerElement.textContent = `${minutes}:${seconds}`;
-        }
-      }, 1000);
+      { q: "𝟐. NAME이 속해있는 집단은 어디인가?", a: "호매실고등학교 방송부", choices: ["칠보고등학교", "율천고등학교", "호매실고등학교 배구부", "호매실고등학교 방송부", "호매실고등학교 학생회", "이 중에 없음"] },
+      { q: "𝟑. NAME의 동물상은?", a: "공룡상", choices: ["강아지상", "꼬부기상", "고양이상", "뱀상", "공룡상", "이 중에 없음"] },
+      { q: "𝟒. NAME의 헤어스타일", a: "숏컷", choices: ["긴생머리", "칼단발", "숏컷", "묶음머리", "리프컷", "이 중에 없음"] },
+      { q: "𝟓. 신유수를 제외한 신.여.만 작전의 창설 멤버는?", a: "이 중에 없음", choices: ["김기범", "김건우", "윤예찬", "송인호", "정세윤", "이 중에 없음"] },
+      { q: "𝟔. 신유수가 NAME에게 마음을 품게 된 가장 처음 이유는?", a: "몸매", choices: ["목소리", "성적(成績)", "성격", "얼굴", "몸매", "이 중에 없음"] },
+      { q: "𝟕. 신유수가 NAME에게 처음 디엠한 날짜는?", a: "이 중에 없음", choices: ["2025년5월3일", "2025년5월6일", "2025년5월8일", "2025년5월10일", "2025년5월17일", "이 중에 없음"] },
+      { q: "𝟖. 신유수가 NAME에게 가장 처음으로 한 디엠은?", a: "이 중에 없음", choices: ["너 내 여자해라.", "안녕, 저번에 우연히 봤는데 너무 내 취향이라 디엠 해봤어.", "내 아를 낳아도.", "넣을게~", "안녕하세요, 3학년 신유수 입니다.", "이 중에 없음"] },
+      { q: "𝟗. 신유수 말고도 NAME을 탐내는 사람은?", a: "이 중에 없음", choices: ["이수호", "강현민", "김기범", "김건우", "윤예찬", "이 중에 없음"] },
+      { q: "𝟏𝟎. 신.여.만 작전의 멤버를 올바르게 짝 지어놓은 것은?", a: "신유수, 손현민, 김기범, 김건우, 송인호", choices: ["신유수, 김기범, 김건우, 송인호, 이수호", "윤예찬, 손현민, 김기범, 김건우, 이수호", "신유수, 이수호, 김기범, 송인호, 윤예찬", "신유수, 손현민, 김기범, 김건우, 송인호", "신유수, 손현민, 김건우, 송인호, 권혁", "이 중에 없음"] },
+      { q
+::contentReference[oaicite:35]{index=35}
+ 
