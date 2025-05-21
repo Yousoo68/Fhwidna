@@ -49,7 +49,6 @@
     }
     .slide {
       display: none;
-      transition: all 0.5s ease;
     }
     .slide.active {
       display: block;
@@ -135,40 +134,30 @@
   </div>
 
   <script>
-    const correctPassword = "AZ56W6jpqx8EmsV";
-    const authContainer = document.getElementById('authContainer');
-    const startBtn = document.getElementById('startBtn');
-    const quizContainer = document.getElementById('quiz');
-    const timerElement = document.getElementById('timer');
-    const result = document.getElementById('result');
-    const scoreText = document.getElementById('scoreText');
-    const enterBtn = document.getElementById('enterBtn');
-    const mistakeList = document.getElementById('mistakeList');
-    const toggleMistakesBtn = document.getElementById('toggleMistakesBtn');
-    const checkPasswordBtn = document.getElementById('checkPasswordBtn');
+    document.addEventListener("DOMContentLoaded", function () {
+      const correctPassword = "AZ56W6jpqx8EmsV";
+      const authContainer = document.getElementById("authContainer");
+      const startBtn = document.getElementById("startBtn");
+      const passwordInput = document.getElementById("passwordInput");
+      const checkPasswordBtn = document.getElementById("checkPasswordBtn");
 
-    let currentIndex = 0;
-    let score = 0;
-    let timer;
-    let timeLeft = 180;
-    let chosenName = "조예진";
-    let wrongAnswers = [];
+      checkPasswordBtn.addEventListener("click", function () {
+        const enteredPassword = passwordInput.value;
+        if (enteredPassword === correctPassword) {
+          alert("인증 성공! 시작 버튼을 눌러 퀴즈를 시작하세요.");
+          startBtn.style.display = "inline-block";
+        } else {
+          alert("비밀번호가 틀렸습니다.");
+        }
+      });
 
-    const quizData = [
-      {
-        q: "𝟏. 현재 신유수가 마음에 품고 있는 상대(108)의 본명은 무엇인가?",
-        a: "조예진",
-        choices: ["정유진", "조예진", "조여진", "정효진", "주예지", "이 중에 없음"]
-      },
-      { q: "𝟐. NAME이 속해있는 집단은 어디인가?", a: "호매실고등학교 방송부", choices: ["칠보고등학교", "율천고등학교", "호매실고등학교 배구부", "호매실고등학교 방송부", "호매실고등학교 학생회", "이 중에 없음"] },
-      { q: "𝟑. NAME의 동물상은?", a: "공룡상", choices: ["강아지상", "꼬부기상", "고양이상", "뱀상", "공룡상", "이 중에 없음"] },
-      { q: "𝟒. NAME의 헤어스타일", a: "숏컷", choices: ["긴생머리", "칼단발", "숏컷", "묶음머리", "리프컷", "이 중에 없음"] },
-      { q: "𝟓. 신유수를 제외한 신.여.만 작전의 창설 멤버는?", a: "이 중에 없음", choices: ["김기범", "김건우", "윤예찬", "송인호", "정세윤", "이 중에 없음"] },
-      { q: "𝟔. 신유수가 NAME에게 마음을 품게 된 가장 처음 이유는?", a: "몸매", choices: ["목소리", "성적(成績)", "성격", "얼굴", "몸매", "이 중에 없음"] },
-      { q: "𝟕. 신유수가 NAME에게 처음 디엠한 날짜는?", a: "이 중에 없음", choices: ["2025년5월3일", "2025년5월6일", "2025년5월8일", "2025년5월10일", "2025년5월17일", "이 중에 없음"] },
-      { q: "𝟖. 신유수가 NAME에게 가장 처음으로 한 디엠은?", a: "이 중에 없음", choices: ["너 내 여자해라.", "안녕, 저번에 우연히 봤는데 너무 내 취향이라 디엠 해봤어.", "내 아를 낳아도.", "넣을게~", "안녕하세요, 3학년 신유수 입니다.", "이 중에 없음"] },
-      { q: "𝟗. 신유수 말고도 NAME을 탐내는 사람은?", a: "이 중에 없음", choices: ["이수호", "강현민", "김기범", "김건우", "윤예찬", "이 중에 없음"] },
-      { q: "𝟏𝟎. 신.여.만 작전의 멤버를 올바르게 짝 지어놓은 것은?", a: "신유수, 손현민, 김기범, 김건우, 송인호", choices: ["신유수, 김기범, 김건우, 송인호, 이수호", "윤예찬, 손현민, 김기범, 김건우, 이수호", "신유수, 이수호, 김기범, 송인호, 윤예찬", "신유수, 손현민, 김기범, 김건우, 송인호", "신유수, 손현민, 김건우, 송인호, 권혁", "이 중에 없음"] },
-      { q
-::contentReference[oaicite:35]{index=35}
- 
+      startBtn.addEventListener("click", function () {
+        authContainer.style.display = "none";
+        document.getElementById("quiz").style.display = "block";
+        timerElement.style.display = "block";
+        // 여기에 퀴즈 시작 함수 추가 (ex. startQuiz())
+      });
+    });
+  </script>
+</body>
+</html>
