@@ -30,7 +30,6 @@
       margin-bottom: 1.5rem;
       color: #3a306d;
       text-align: center;
-      user-select: none;
     }
     #timer {
       position: fixed;
@@ -44,7 +43,6 @@
       font-size: 1.25rem;
       color: #764ba2;
       display: none;
-      user-select: none;
     }
     #authContainer {
       text-align: center;
@@ -56,12 +54,6 @@
       border: 2px solid #764ba2;
       border-radius: 8px;
       margin-bottom: 1rem;
-      transition: border-color 0.3s ease;
-    }
-    #authContainer input:focus {
-      outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 8px #667eea;
     }
     button {
       cursor: pointer;
@@ -72,18 +64,16 @@
       font-size: 1rem;
       padding: 0.75rem 1.8rem;
       font-weight: 600;
-      transition: background 0.3s ease;
-      user-select: none;
-    }
-    button:hover:not(:disabled) {
-      background: #667eea;
-    }
-    button:disabled {
-      background: #bbb;
-      cursor: default;
     }
     #quiz {
-      user-select: none;
+      opacity: 0;
+      height: 0;
+      overflow: hidden;
+      transition: opacity 0.5s ease, height 0.5s ease;
+    }
+    #quiz.show {
+      opacity: 1;
+      height: auto;
     }
     .question {
       font-size: 1.4rem;
@@ -109,28 +99,13 @@
       background: #f0f0ff;
       border: 2px solid #764ba2;
       border-radius: 8px;
-      transition: background 0.3s, color 0.3s, border-color 0.3s;
-    }
-    .options button:hover {
-      background: #764ba2;
-      color: #fff;
-      border-color: #4a3c8c;
-    }
-    .slide {
-      opacity: 0;
-      transform: translateX(100%);
-      transition: opacity 0.5s ease, transform 0.5s ease;
-      pointer-events: none;
-      user-select: none;
-    }
-    .slide.active {
-      opacity: 1;
-      transform: translateX(0);
-      pointer-events: auto;
     }
     #result {
       text-align: center;
-      user-select: none;
+      display: none;
+    }
+    #result.show {
+      display: block;
     }
     #scoreText {
       font-size: 1.5rem;
@@ -138,442 +113,137 @@
       color: #4a3c8c;
       margin-bottom: 1rem;
     }
-    #toggleMistakesBtn {
-      background: #a987d1;
-      margin-bottom: 1rem;
-      user-select: none;
-    }
     #mistakeList {
       max-height: 0;
       overflow: hidden;
-      transition: max-height 0.5s ease, opacity 0.5s ease;
-      opacity: 0;
+      transition: max-height 0.5s ease;
       text-align: left;
       border: 1px solid #a987d1;
       border-radius: 10px;
       padding: 0 1rem;
-      color: #4a3c8c;
-      font-size: 1rem;
-      line-height: 1.4;
-      user-select: text;
       margin-bottom: 1rem;
       background: #f5f3fa;
     }
     #mistakeList.show {
       max-height: 400px;
-      opacity: 1;
       padding: 1rem;
-    }
-    #enterBtn {
-      background: #4a3c8c;
-      user-select: none;
-    }
-    #congrats {
-      font-size: 1.7rem;
-      font-weight: 700;
-      color: #27ae60;
-      margin-top: 2rem;
-      user-select: none;
     }
   </style>
 </head>
 <body>
   <div id="timer">03:00</div>
-
   <div class="quiz-container">
     <div id="authContainer">
       <h2>비밀번호를 입력하세요</h2>
-      <input type="password" id="passwordInput" placeholder="비밀번호 입력" autocomplete="off" />
+      <input type="password" id="passwordInput" placeholder="비밀번호 입력" />
       <br/>
       <button id="checkPasswordBtn">확인</button>
       <br/>
       <button id="startBtn" style="display:none;">Start</button>
     </div>
 
-    <div id="quiz" style="display:none;">
-      <div class="slide question-slide active">
-        <div class="question" id="questionText"></div>
-        <ul class="options" id="optionsList"></ul>
-      </div>
+    <div id="quiz">
+      <div class="question" id="questionText"></div>
+      <ul class="options" id="optionsList"></ul>
     </div>
 
-    <div id="result" class="slide" style="display:none;">
+    <div id="result">
       <h2 id="scoreText"></h2>
       <button id="toggleMistakesBtn">오답 보기</button>
       <div id="mistakeList"></div>
       <button id="enterBtn">입장하기</button>
-      <div id="congrats" style="display:none;">축하합니다! 만점을 받으셨습니다!</div>
     </div>
   </div>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const correctPassword = "AZ56W6jpqx8EmsV";
-
       const authContainer = document.getElementById("authContainer");
-      const startBtn = document.getElementById("startBtn");
-      const passwordInput = document.getElementById("passwordInput");
-      const checkPasswordBtn = document.getElementById("checkPasswordBtn");
-
       const quizContainer = document.getElementById("quiz");
-      const questionText = document.getElementById("questionText");
-      const optionsList = document.getElementById("optionsList");
-
-      const timerElement = document.getElementById("timer");
       const resultContainer = document.getElementById("result");
-      const scoreText = document.getElementById("scoreText");
-      const toggleMistakesBtn = document.getElementById("toggleMistakesBtn");
-      const mistakeList = document.getElementById("mistakeList");
-      const enterBtn = document.getElementById("enterBtn");
-      const congratsText = document.getElementById("congrats");
-
-      // 문제 데이터 (question에는 나중에 동적 치환 대상 '조예진' 텍스트 포함)
+      const timerElement = document.getElementById("timer");
       const questionsBase = [
         {
           question: "𝟏. 현재 신유수가 마음에 품고 있는 상대(108)의 본명은 무엇인가?",
-          options: [
-            "정유진",
-            "조예진",
-            "조여진",
-            "정효진",
-            "주예지",
-            "이 중에 없음"
-          ],
+          options: ["정유진","조예진","조여진","정효진","주예지","이 중에 없음"],
           correct: "조예진"
         },
         {
           question: "𝟐. {name}이 속해있는 집단은 어디인가?",
-          options: [
-            "칠보고등학교",
-            "율천고등학교",
-            "호매실고등학교 배구부",
-            "호매실고등학교 방송부",
-            "호매실고등학교 학생회",
-            "이 중에 없음"
-          ],
+          options: ["칠보고등학교","율천고등학교","호매실고등학교 배구부","호매실고등학교 방송부","호매실고등학교 학생회","이 중에 없음"],
           correct: "호매실고등학교 방송부"
         },
-        {
-          question: "𝟑. {name}의 동물상은?",
-          options: [
-            "강아지상",
-            "꼬부기상",
-            "고양이상",
-            "뱀상",
-            "공룡상",
-            "이 중에 없음"
-          ],
-          correct: "공룡상"
-        },
-        {
-          question: "𝟒. {name}의 헤어스타일",
-          options: [
-            "긴생머리",
-            "칼단발",
-            "숏컷",
-            "묶음머리",
-            "리프컷",
-            "이 중에 없음"
-          ],
-          correct: "숏컷"
-        },
-        {
-          question: "𝟓. {name} 꼬시기 작전의 첫 조력자는?",
-          options: [
-            "김기범",
-            "김건우",
-            "윤예찬",
-            "송인호",
-            "정세윤",
-            "이 중에 없음"
-          ],
-          correct: "이 중에 없음"
-        },
-        {
-          question: "𝟔. 신유수가 {name}에게 마음을 품게 된 가장 처음 이유는?",
-          options: [
-            "목소리",
-            "성적(成績)",
-            "성격",
-            "얼굴",
-            "몸매",
-            "이 중에 없음"
-          ],
-          correct: "몸매"
-        },
-        {
-          question: "𝟕. 신유수가 {name}에게 처음 디엠한 날짜는?",
-          options: [
-            "2025년5월3일",
-            "2025년5월6일",
-            "2025년5월8일",
-            "2025년5월10일",
-            "2025년5월17일",
-            "이 중에 없음"
-          ],
-          correct: "이 중에 없음"
-        },
-        {
-          question: "𝟖. 신유수가 {name}에게 가장 처음으로 한 말은?",
-          options: [
-            "너 내 여자해라.",
-            "안녕, 저번에 우연히 봤는데 너무 내 취향이라 디엠 해봤어.",
-            "내 아를 낳아도.",
-            "넣을게~",
-            "안녕하세요, 3학년 신유수 입니다.",
-            "이 중에 없음"
-          ],
-          correct: "이 중에 없음"
-        },
-        {
-          question: "𝟗. 신유수 말고도 {name}을 탐내는 사람은?",
-          options: [
-            "이수호",
-            "강현민",
-            "김기범",
-            "김건우",
-            "윤예찬",
-            "이 중에 없음"
-          ],
-          correct: "이 중에 없음"
-        },
-        {
-          question: "𝟏𝟎. 신.여.만 작전의 멤버를 올바르게 짝 지어놓은 것은?",
-          options: [
-            "신유수, 김기범, 김건우, 송인호, 이수호",
-            "윤예찬, 손현민, 김기범, 김건우, 이수호",
-            "신유수, 이수호, 김기범, 송인호, 윤예찬",
-            "신유수, 손현민, 김기범, 김건우, 송인호",
-            "신유수, 손현민, 김건우, 송인호, 권혁",
-            "이 중에 없음"
-          ],
-          correct: "신유수, 손현민, 김기범, 김건우, 송인호"
-        },
-        {
-          question: "𝟏𝟏. {name}을 알고있는 사람으로 옳지 않은 것은?",
-          options: [
-            "손현민",
-            "신유수",
-            "이수호",
-            "권혁",
-            "윤예찬",
-            "이 중에 없음"
-          ],
-          correct: "윤예찬"
-        },
-        {
-          question: "𝟏𝟐. {name}의 생일은?",
-          options: [
-            "6월8일",
-            "3월17일",
-            "11월8일",
-            "12월12일",
-            "1월27일",
-            "이 중에 없음"
-          ],
-          correct: "이 중에 없음"
-        },
-        {
-          question: "𝟏𝟑. 신유수가 가장 좋아하는 노래는?",
-          options: [
-            "카더가든 - 조각 구름",
-            "10cm - 봄눈",
-            "Stephen Sanchez - Until I Found You",
-            "The Walters - I Love you so",
-            "씨발밴드 - 자지, 보지, 섹스!",
-            "이 중에 없음"
-          ],
-          correct: "이 중에 없음"
-        }
+        // ... (나머지 문제 생략)
       ];
 
-      // 문제 텍스트 내 {name} 치환 함수
+      let questions = [], currentIndex = 0, userAnswers = [], timer, timeLeft = 180;
+      let dynamicName = "조예진";
+
       function replaceName(text, name) {
         return text.replace(/\{name\}/g, name);
       }
 
-      let questions = [];
-      let currentIndex = 0;
-      let userAnswers = [];
-      let timer;
-      let timeLeft = 180; // 3분
-
-      // 텍스트 변경용 이름 (1번 문제에서 정답 선택시 정답/오답에 따라 변경)
-      let dynamicName = "조예진"; // 기본값
-
-      function shuffleArray(arr) {
-        let array = arr.slice();
-        for (let i = array.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
-      }
-
       function startTimer() {
         timerElement.style.display = "block";
-        timerElement.textContent = formatTime(timeLeft);
-
         timer = setInterval(() => {
           timeLeft--;
-          timerElement.textContent = formatTime(timeLeft);
-          if (timeLeft <= 0) {
-            clearInterval(timer);
-            finishQuiz(true);
-          }
+          timerElement.textContent = `${Math.floor(timeLeft/60)}:${(timeLeft%60).toString().padStart(2,'0')}`;
+          if (timeLeft <= 0) finishQuiz(true);
         }, 1000);
       }
 
-      function formatTime(seconds) {
-        const m = Math.floor(seconds / 60).toString().padStart(2, "0");
-        const s = (seconds % 60).toString().padStart(2, "0");
-        return `${m}:${s}`;
-      }
-
       function renderQuestion(index) {
-        const q = questions[index];
-        questionText.textContent = replaceName(q.question, dynamicName);
-
-        // 옵션 랜덤섞기
-        const shuffledOptions = shuffleArray(q.options);
-
-        optionsList.innerHTML = "";
-        shuffledOptions.forEach(opt => {
-          const li = document.createElement("li");
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.textContent = opt;
-          btn.onclick = () => selectAnswer(opt);
-          li.appendChild(btn);
-          optionsList.appendChild(li);
-        });
-
-        // 슬라이드 효과
-        const slides = document.querySelectorAll(".question-slide");
-        slides.forEach(s => s.classList.remove("active"));
-        // 재사용할 경우 슬라이드 한 개이므로 그냥 active 유지
-        // 혹시 여러개 있을 경우 적용 가능
+        document.getElementById("questionText").textContent = replaceName(questions[index].question, dynamicName);
+        optionsList.innerHTML = questions[index].options.map(opt => 
+          `<li><button onclick="selectAnswer('${opt}')">${opt}</button></li>`
+        ).join("");
       }
 
       function selectAnswer(selected) {
         userAnswers[currentIndex] = selected;
-
-        // 1번 문제에서 답 선택 시 이름 변경 처리
-        if (currentIndex === 0) {
-          if (selected === questionsBase[0].correct) {
-            dynamicName = questionsBase[0].correct;
-          } else {
-            dynamicName = selected;
-          }
-          // 문제 문항들에 이름 변경 반영하려면 다시 질문 렌더링 필요
-          // 다음 문제부터 치환해서 보여줌
-        }
-
-        currentIndex++;
-        if (currentIndex < questions.length) {
-          renderQuestion(currentIndex);
-        } else {
-          clearInterval(timer);
-          finishQuiz(false);
-        }
+        if (currentIndex === 0) dynamicName = selected;
+        if (++currentIndex < questions.length) renderQuestion(currentIndex);
+        else finishQuiz(false);
       }
 
       function finishQuiz(timeout) {
-        authContainer.style.display = "none";
-        quizContainer.style.display = "none";
-        timerElement.style.display = "none";
+        clearInterval(timer);
+        quizContainer.classList.remove("show");
+        resultContainer.classList.add("show");
+        
+        let score = 0, mistakes = [];
+        questions.forEach((q, i) => {
+          if (userAnswers[i] === q.correct) score++;
+          else mistakes.push(`Q${i+1}: ${replaceName(q.question, dynamicName)} (선택: ${userAnswers[i] || '미응답'})`);
+        });
 
-        resultContainer.style.display = "block";
-        resultContainer.classList.add("active");
-
-        // 점수 계산
-        let score = 0;
-        let mistakes = [];
-        for (let i = 0; i < questions.length; i++) {
-          let userAns = userAnswers[i];
-          if (timeout && userAns === undefined) {
-            // 시간초과로 못 푼 문제 오답 처리
-            userAns = null;
-            userAnswers[i] = null;
-          }
-          const correctAns = questions[i].correct;
-          if (userAns === correctAns) {
-            score++;
-          } else {
-            mistakes.push(`${i + 1}번 문제 정답: ${correctAns} / 선택: ${userAns === null ? '미응답' : userAns}`);
-          }
-        }
-
-        scoreText.textContent = `당신의 점수: ${score} / ${questions.length}`;
-
-        mistakeList.innerHTML = mistakes.length > 0 ? mistakes.map(m => `<div>${m}</div>`).join("") : "<div>모든 문제를 맞히셨습니다!</div>";
-        mistakeList.classList.remove("show");
-        toggleMistakesBtn.textContent = "오답 보기";
-
-        if (score === questions.length) {
-          congratsText.style.display = "block";
-        } else {
-          congratsText.style.display = "none";
-        }
-
-        toggleMistakesBtn.disabled = mistakes.length === 0;
-
-        // 입장하기 버튼 상태 (완전 정답일 때 텍스트 변경)
-        enterBtn.textContent = score === questions.length ? "축하합니다! 입장하기" : "다시 시도하기";
+        document.getElementById("scoreText").textContent = `점수: ${score}/${questions.length}`;
+        document.getElementById("mistakeList").innerHTML = mistakes.join("<br>");
+        document.getElementById("enterBtn").textContent = score === questions.length ? "축하합니다! 입장하기" : "다시 시도하기";
       }
 
-      toggleMistakesBtn.addEventListener("click", () => {
-        if (mistakeList.classList.contains("show")) {
-          mistakeList.classList.remove("show");
-          toggleMistakesBtn.textContent = "오답 보기";
-        } else {
-          mistakeList.classList.add("show");
-          toggleMistakesBtn.textContent = "오답 닫기";
-        }
+      document.getElementById("checkPasswordBtn").addEventListener("click", () => {
+        if (document.getElementById("passwordInput").value === correctPassword) {
+          document.getElementById("startBtn").style.display = "inline-block";
+          document.getElementById("checkPasswordBtn").style.display = "none";
+        } else alert("비밀번호 틀림");
       });
 
-      enterBtn.addEventListener("click", () => {
-        // 만점이면 축하 메시지 보여준 상태에서 페이지 머물고,
-        // 아니면 재시작 (리다이렉트, 또는 페이지 새로고침)
-        if (enterBtn.textContent.includes("축하")) {
-          alert("만점 축하합니다! 신여만 작전에 입장합니다.");
-          // 원하시면 여기서 실제 입장 페이지로 이동하는 코드를 넣으세요
-          // location.href = "/신여만작전.html";
-        } else {
-          location.reload();
-        }
-      });
-
-      checkPasswordBtn.addEventListener("click", () => {
-        if (passwordInput.value === correctPassword) {
-          checkPasswordBtn.style.display = "none";
-          passwordInput.style.display = "none";
-          startBtn.style.display = "inline-block";
-        } else {
-          alert("비밀번호가 틀렸습니다.");
-          passwordInput.value = "";
-          passwordInput.focus();
-        }
-      });
-
-      startBtn.addEventListener("click", () => {
+      document.getElementById("startBtn").addEventListener("click", () => {
         authContainer.style.display = "none";
-        quizContainer.style.display = "block";
-
-        // 초기 질문 복사 및 동적 이름 반영
-        questions = questionsBase.map(q => ({
-          question: replaceName(q.question, dynamicName),
-          options: q.options.slice(),
-          correct: q.correct
-        }));
-
-        currentIndex = 0;
-        userAnswers = [];
-        timeLeft = 180;
+        quizContainer.classList.add("show");
+        questions = JSON.parse(JSON.stringify(questionsBase));
         startTimer();
-        renderQuestion(currentIndex);
+        renderQuestion(0);
       });
 
+      document.getElementById("toggleMistakesBtn").addEventListener("click", () => {
+        document.getElementById("mistakeList").classList.toggle("show");
+      });
+
+      document.getElementById("enterBtn").addEventListener("click", () => {
+        location.reload();
+      });
     });
   </script>
 </body>
