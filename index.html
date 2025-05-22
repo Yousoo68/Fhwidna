@@ -27,35 +27,31 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
       font-size: 1.25rem; color: #764ba2; display: none;
     }
+    input, button {
+      font-size: 1rem; border-radius: 8px;
+      padding: 0.6rem 1.2rem; margin-bottom: 1rem;
+    }
     input {
-      width: 80%; padding: 0.6rem; margin-bottom: 1rem;
-      border: 2px solid #764ba2; border-radius: 8px;
-      font-size: 1rem;
+      width: 80%; border: 2px solid #764ba2;
     }
     button {
-      cursor: pointer; background: #764ba2; color: #fff;
-      border: none; border-radius: 10px;
-      font-size: 1rem; padding: 0.75rem 1.8rem; font-weight: 600;
+      cursor: pointer; background: #764ba2; color: #fff; border: none;
+      font-weight: 600;
     }
     #quiz, #result { display: none; }
     #quiz.show, #result.show { display: block; }
     .question { font-size: 1.4rem; font-weight: 600; color: #4a3c8c; min-height: 60px; }
-    .options { list-style: none; padding: 0; }
     .options button {
-      width: 100%; padding: 0.85rem; margin: 0.6rem 0;
-      font-size: 1.1rem; color: #4a3c8c;
-      background: #f0f0ff; border: 2px solid #764ba2; border-radius: 8px;
+      width: 100%; background: #f0f0ff; color: #4a3c8c;
+      border: 2px solid #764ba2; margin: 0.6rem 0;
     }
     #mistakeList {
       max-height: 0; overflow: hidden;
       transition: max-height 0.5s ease;
       background: #f5f3fa; border: 1px solid #a987d1;
-      border-radius: 10px; padding: 0 1rem; margin-bottom: 1rem;
-      text-align: left;
+      border-radius: 10px; padding: 0 1rem;
     }
-    #mistakeList.show {
-      max-height: 400px; overflow-y: auto; padding: 1rem;
-    }
+    #mistakeList.show { max-height: 400px; overflow-y: auto; padding: 1rem; }
   </style>
 </head>
 <body>
@@ -241,8 +237,8 @@
           ],
           correct: "이 중에 없음"
         }
-      ]; // 기존 문제 배열 생략 가능, 그대로 유지
-      let questions = [], currentIndex = 0, userAnswers = [], timer, timeLeft = 180;
+      ];
+      let questions = [], currentIndex = 0, userAnswers = [], timer, timeLeft = 180, score = 0;
       let dynamicName = "조예진";
 
       const replaceName = (text, name) => text.replace(/\{name\}/g, name);
@@ -270,7 +266,8 @@
         clearInterval(timer);
         document.getElementById("quiz").classList.remove("show");
         document.getElementById("result").classList.add("show");
-        let score = 0, mistakes = [];
+        let mistakes = [];
+        score = 0;
         questions.forEach((q, i) => {
           if (userAnswers[i] === q.correct) score++;
           else mistakes.push(`Q${i+1}: ${replaceName(q.question, dynamicName)} (선택: ${userAnswers[i] || '미응답'})`);
@@ -308,7 +305,11 @@
         document.getElementById("mistakeList").classList.toggle("show");
       };
 
-      document.getElementById("enterBtn").onclick = () => location.reload();
+      document.getElementById("enterBtn").onclick = () => {
+        if (score === questions.length) {
+          window.location.href = "https://yousoo68.github.io/SSUL/";
+        } else location.reload();
+      };
     });
   </script>
 </body>
